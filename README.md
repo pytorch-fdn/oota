@@ -1,9 +1,9 @@
 # PyTorch Out-of-tree Accelerator TestInfra
 
-Welcome to the `oota` repository! This repository is
-designed to facilitate the integration testing of different accelerators with
-PyTorch. Our primary focus is to ensure seamless integration and compatibility
-across various devices by running comprehensive GitHub workflows.
+Welcome! This repository is designed to facilitate the integration testing of 
+different accelerators with PyTorch. Our primary focus is to ensure seamless 
+integration and compatibility across various devices by running comprehensive 
+GitHub workflows.
 
 ## Accelerator Integration Test Results
 
@@ -133,7 +133,6 @@ correctly and efficiently across different platforms.
 ### Key Features
 
 - **Automated Integration Tests**: Run tests automatically for different devices using GitHub Actions.
-- **Cross-Device Compatibility**: Ensure that PyTorch functions correctly on NPUs, GPUs, and other devices.
 - **Reusable Workflows**: Leverage modular and reusable workflows to streamline the testing process.
 
 ## Usage
@@ -148,15 +147,12 @@ triggering the workflows.
 
 For customize your own workflows, here are some reference configuration in [workflow](https://github.com/pytorch-fdn/oota/tree/main/.github/workflows).
 
-## Roadmap
-
-TBD
-
 ## Contributing
 
 We welcome contributions to enhance the integration testing process. Feel free
 to submit issues, pull requests, or suggestions to help us improve the
-compatibility and performance of PyTorch on various devices.
+compatibility and performance of PyTorch on various devices. See the 
+[CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ### Reporting Issues
 
@@ -165,5 +161,5 @@ please report them via the [Issues](https://github.com/pytorch-fdn/oota/issues) 
 
 ## License
 
-This project is licensed under BSD-3-Clause license. See the [LICENSE](LICENSE)
+This project is licensed under Apache-2.0 license. See the [LICENSE](LICENSE)
 file for more details.
