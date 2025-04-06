@@ -1,0 +1,162 @@
+name: 'Gaudi HPU Test Suite'
+
+on:
+  push:
+    branches:
+      - 'hpu'
+    paths:
+      - '.github/workflows/gaudi_hpu_test.yml'
+      - '.github/workflows/_gaudi_hpu_build_torch.yml'
+      - '.github/workflows/_gaudi_hpu_build_torch_hpu.yml'
+      - '.github/workflows/_gaudi_hpu_ut.yml'
+      - '.github/workflows/_gaudi_hpu_benchmark.yml'
+      - '.ci/**'
+      - 'gaudi_hpu/**'
+      - 'src/**'
+      - '!**/*.md'
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/gaudi_hpu_test.yml'
+      - '.github/workflows/_gaudi_hpu_build_torch.yml'
+      - '.github/workflows/_gaudi_hpu_build_torch_hpu.yml'
+      - '.github/workflows/_gaudi_hpu_ut.yml'
+      - '.github/workflows/_gaudi_hpu_benchmark.yml'
+      - '.ci/**'
+      - 'gaudi_hpu/**'
+      - 'src/**'
+      - '!**/*.md'
+  release:
+    types:
+      - 'published'
+  schedule:
+    - cron: '0 12 * * *'
+  repository_dispatch:
+    types: [pytorch-nightly-event-dispatch]
+  workflow_dispatch:
+    inputs:
+      runner:
+        required: true
+        type: choice
+        options:
+          - linux-gaudi3
+          - linux-gaudi3-0
+          - linux-gaudi3-1
+        default: 'linux-gaudi3'
+        description: 'The runner selected to run on'
+      image:
+        required: true
+        type: choice
+        options:
+          - vault.habana.ai/gaudi-docker/1.20.0/ubuntu24.04/habanalabs/pytorch-installer-2.6.0:latest
+          - vault.habana.ai/gaudi-docker/1.19.2/ubuntu22.04/habanalabs/pytorch-installer-2.5.1:latest
+        default: 'vault.habana.ai/gaudi-docker/1.20.0/ubuntu24.04/habanalabs/pytorch-installer-2.6.0:latest'
+        description: 'The docker image which will be loaded'
+      device:
+        required: true
+        type: choice
+        # TODO: Need modify for hpu
+        options:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+        default: '0'
+        description: 'The device selected to run on'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      runner: ${{ steps.set-env.outputs.runner }}
+      image: ${{ steps.set-env.outputs.image }}
+      device: ${{ steps.set-env.outputs.device }}
+      ref: ${{ steps.list-ref.outputs.ref }}
+      pr-number: ${{ steps.list-ref.outputs.pr_number }}
+    steps:
+      - name: Set environment params
+        id: set-env
+        run: |
+          echo "runner=${{ github.event.ihputs.runner || 'linux-gaudi3' }}" >> $GITHUB_OUTPUT
+          echo "device=${{ github.event.ihputs.device || '0' }}" >> $GITHUB_OUTPUT
+          echo "image=${{ github.event.ihputs.image || 'vault.habana.ai/gaudi-docker/1.20.0/ubuntu24.04/habanalabs/pytorch-installer-2.6.0:latest' }}" >> $GITHUB_OUTPUT
+
+      - name: List ref to the PyTorch branch
+        id: list-ref
+        if: ${{ github.event_name == 'repository_dispatch' }}
+        run: |
+          echo "ref=${{ github.event.client_payload.ref }}" >> $GITHUB_OUTPUT
+          echo "sha=${{ github.event.client_payload.sha }}" >> $GITHUB_OUTPUT
+
+  build-torch:
+    name: Build torch
+    needs:
+      - prepare
+    # if: ${{ needs.prepare.outputs.ref }}
+    uses: ./.github/workflows/_build_torch.yml
+    with:
+      runner: ${{ needs.prepare.outputs.runner }}
+      image: ${{ needs.prepare.outputs.image }}
+
+
+  build:
+    name: Build torch_hpu
+    needs:
+      - prepare
+      - build-torch
+    if: ${{ !cancelled() && (success() || needs.build-torch.result == 'skipped') }}
+    uses: ./.github/workflows/_gaudi_hpu_build_torch_hpu.yml
+    with:
+      runner: ${{ needs.prepare.outputs.runner }}
+      image: ${{ needs.prepare.outputs.image }}
+      device: ${{ needs.prepare.outputs.device }}
+      torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
+
+  test:
+    name: Test torch_hpu
+    needs:
+      - prepare
+      - build-torch
+      - build
+    if: |
+      !cancelled() && github.event_name != 'repository_dispatch' &&
+      (success() || (needs.build-torch.result == 'skipped' && needs.build.result == 'success'))
+    uses: ./.github/workflows/_gaudi_hpu_ut.yml
+    with:
+      runner: ${{ needs.prepare.outputs.runner }}
+      image: ${{ needs.prepare.outputs.image }}
+      device: ${{ needs.prepare.outputs.device }}
+      torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
+      torch-hpu-artifact: ${{ needs.build.outputs.torch-hpu-artifact }}
+      torch-hpu-dl-artifact: ${{ needs.build.outputs.torch-hpu-dl-artifact }}
+
+  benchmark:
+    name: Run benchmarks
+    needs:
+      - prepare
+      - build-torch
+      - build
+      - test
+    if: |
+      !cancelled() && github.event_name != 'repository_dispatch' &&
+      (success() || (needs.build-torch.result == 'skipped' && needs.build.result == 'success'))
+    uses: ./.github/workflows/_gaudi_hpu_benchmark.yml
+    with:
+      runner: ${{ needs.prepare.outputs.runner }}
+      image: ${{ needs.prepare.outputs.image }}
+      device: ${{ needs.prepare.outputs.device }}
+      torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
+      torch-hpu-artifact: ${{ needs.build.outputs.torch-hpu-artifact }}
+      torch-hpu-dl-artifact: ${{ needs.build.outputs.torch-hpu-dl-artifact }}
+    secrets:
+      pr-token: ${{ secrets.COSDT_BOT_TOKEN }}

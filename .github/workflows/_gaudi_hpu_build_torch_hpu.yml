@@ -1,0 +1,198 @@
+name: '_gaudi_hpu_build'
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        required: true
+        type: string
+        description: 'The runner selected to run on'
+      image:
+        required: true
+        type: string
+        description: 'The docker image which will be used to build'
+      device:
+        required: true
+        type: string
+        description: 'The device selected to run on'
+      torch-artifact:
+        required: false
+        type: string
+        description: 'The distribution artifact name of torch'
+      python_version:
+        required: false
+        type: string
+        default: '3.10'
+        description: 'The python version to use'
+    outputs:
+      torch-hpu-artifact:
+        description: 'The distribution artifact name of torch_hpu'
+        value: ${{ jobs.build.outputs.bridge-dist-name }}
+      torch-hpu-dl-artifact:
+        description: 'The distribution artifact name of torch_hpu dataloader'
+        value: ${{ jobs.build.outputs.dl-dist-name }}
+
+# Bash shells do not use ~/.profile or ~/.bashrc so these shells need to be explicitly
+# declared as "shell: bash -el {0}" on steps that need to be properly activated.
+# It's used to activate ascend-toolkit environment variables.
+defaults:
+  run:
+    shell: bash -el {0}
+
+jobs:
+  build:
+    name: build torch_hpu
+    runs-on: ${{ inputs.runner }}
+    container:
+      image: ${{ inputs.image }}
+      env:
+        HABANA_VISIBLE_DEVICES: all
+        OMPI_MCA_btl_vader_single_copy_mechanism: none
+      options: >-
+        --ipc host
+        --cap-add sys_nice
+        --runtime habana
+    outputs:
+      bridge-dist-name: ${{ steps.list-dist.outputs.bridge-dist-name }}
+      dl-dist-name: ${{ steps.list-dist.outputs.dl-dist-name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python environment
+        uses: actions/setup-python@v5
+        id: setup-python
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: Setup CPATH
+        run: |
+          echo  "python version : ${{ steps.setup-python.outputs.python-version }}"
+          python_version="${{ inputs.python_version }}"
+          echo  "python path : ${{ steps.setup-python.outputs.python-path }}"
+          CPATH=${pythonLocation}/include/python${python_version}
+          echo CPATH=${CPATH} >> "${GITHUB_ENV}"
+
+      # See: https://github.com/actions/checkout/issues/363#issuecomment-1915075699
+      - name: Config git
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Download torch artifact
+        if: ${{ inputs.torch-artifact }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.torch-artifact }}
+
+      - name: Install torch
+        if: ${{ inputs.torch-artifact }}
+        run: |
+          pip install ${{ inputs.torch-artifact }}
+
+      - name: Prepare torch_hpu
+        run: |
+          mkdir torch_hpu && cd torch_hpu
+          # apt update -y && apt install -y curl gnupg pciutils wget
+          # wget 'https://vault.habana.ai/artifactory/gaudi-installer/latest/habanalabs-installer.sh'
+          export HABANA_SOFTWARE_STACK="$(pwd)"
+          export PYTORCH_MODULES_ROOT_PATH="$HABANA_SOFTWARE_STACK/gaudi-pytorch-bridge"
+          git clone https://github.com/HabanaAI/gaudi-pytorch-bridge $PYTORCH_MODULES_ROOT_PATH
+
+          # IFS=- read -r VERSION BUILD <<EOF
+          # $(bash habanalabs-installer.sh -v)
+          # EOF
+          # "${PYTORCH_MODULES_ROOT_PATH}"/scripts/install_torch_fork.sh "$VERSION" "$BUILD"
+          
+          mkdir 3rd-parties
+          pushd 3rd-parties
+
+          git clone --depth 1 https://github.com/abseil/abseil-cpp.git
+          git clone --depth 1 --branch 9.1.0 https://github.com/fmtlib/fmt fmt-9.1.0
+          git clone --depth 1 --branch 3.3.9 https://gitlab.com/libeigen/eigen.git
+          git clone --depth 1 --branch v0.8.1 https://github.com/Neargye/magic_enum.git magic_enum-0.8.1
+          git clone --depth 1 --branch v1.13.0 https://github.com/google/googletest.git googletest_1_13
+
+          git clone --depth 1 --branch v3.4.0 https://github.com/nlohmann/json.git
+          sed -i 's/namespace nlohmann/namespace nlohmannV340/; s/nlohmann::/nlohmannV340::/g' json/single_include/nlohmann/json.hpp
+
+          popd
+          git clone --depth 1 --branch 1.20.0-543 https://github.com/HabanaAI/HCL.git
+          git clone --depth 1 --branch main https://github.com/HabanaAI/Intel_Gaudi3_Software.git
+
+          ln -s /usr/include/habanalabs/ /usr/include/habanalabs/include
+          ln -s /usr/lib/habanalabs/libaeon.so.1 /usr/lib/habanalabs/libaeon.so
+          patch -p1 <$PYTORCH_MODULES_ROOT_PATH/.devops/patches/Intel_Gaudi3_Software.patch
+          cp $PYTORCH_MODULES_ROOT_PATH/.devops/patches/media_pytorch_proxy.h /usr/include/habanalabs/media_pytorch_proxy.h
+      
+      - name: Build torch_hpu
+        working-directory: torch_hpu
+        run: |
+          export HABANA_SOFTWARE_STACK="$(pwd)"
+          export THIRD_PARTIES_ROOT="$HABANA_SOFTWARE_STACK/3rd-parties"
+
+          export HCL_ROOT="$HABANA_SOFTWARE_STACK/HCL/hcl/"
+          export HL_LOGGER_INCLUDE_DIRS="$HABANA_SOFTWARE_STACK/HCL/dependencies/swtools_sdk/hl_logger/include;$THIRD_PARTIES_ROOT"
+          export MEDIA_ROOT=/usr/include/habanalabs/
+          export SPECS_EXT_ROOT="$HABANA_SOFTWARE_STACK/Intel_Gaudi3_Software/specs_external/"
+          export SYNAPSE_ROOT=/usr/include/habanalabs/
+          export SYNAPSE_UTILS_ROOT=/usr/include/habanalabs/
+
+          export BUILD_ROOT="$HABANA_SOFTWARE_STACK/builds"
+          export BUILD_ROOT_LATEST=/usr/lib/habanalabs/
+          export PYTORCH_MODULES_RELEASE_BUILD="$BUILD_ROOT/pytorch_modules_release"  # the release build artifact directory
+          export PYTORCH_MODULES_DEBUG_BUILD="$BUILD_ROOT/pytorch_modules_debug"  # the debug build artifact directory
+          export PYTORCH_MODULES_ROOT_PATH="$HABANA_SOFTWARE_STACK/gaudi-pytorch-bridge"
+
+          pip install -r "$PYTORCH_MODULES_ROOT_PATH"/requirements.txt
+
+          "$PYTORCH_MODULES_ROOT_PATH"/.devops/build.py -cir
+
+      - name: List distribution package
+        id: list-dist
+        working-directory: torch_hpu/builds/pytorch_modules_release/pkgs
+        run: |
+          bridge_dist_name=$(ls habana_torch_plugin*.whl)
+          bridge_dist_path=$(pwd)/${bridge_dist_name}
+          dl_dist_name=$(ls habana_torch_dataloader*.whl)
+          dl_dist_path=$(pwd)/${dl_dist_name}
+          echo "bridge-dist-name=${bridge_dist_name}" >> $GITHUB_OUTPUT
+          echo "bridge-dist-path=${bridge_dist_path}" >> $GITHUB_OUTPUT
+          echo "dl-dist-name=${dl_dist_name}" >> $GITHUB_OUTPUT
+          echo "dl-dist-path=${dl_dist_path}" >> $GITHUB_OUTPUT
+    
+      - name: Install torch_hpu
+        working-directory: torch_hpu/builds/pytorch_modules_release/pkgs
+        run: |
+          pip install ${{ steps.list-dist.outputs.bridge-dist-name }}
+          pip install ${{ steps.list-dist.outputs.dl-dist-name }}
+
+      - name: List torch_hpu version
+        id: list-version
+        run: |
+          export PT_HPU_LAZY_MODE=0
+          torch_version=$(python -c "import torch; print(torch.__version__)")
+          torch_hpu_version=$(python -c "import habana_frameworks.torch; print(habana_frameworks.torch.torch.__version__)")
+          echo "torch version: ${torch_version}"
+          echo "torch_hpu version: ${torch_hpu_version}"
+          echo "torch-hpu-version=${torch_hpu_version}" >> $GITHUB_OUTPUT
+
+      - name: Upload distribution artifact
+        id: upload-dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: torch_hpu_dists
+          path: |
+            ${{ steps.list-dist.outputs.bridge-dist-path }}
+            ${{ steps.list-dist.outputs.dl-dist-path }}
+          if-no-files-found: error
+          retention-days: 14
+          overwrite: true
+
+      - name: Write to workflow job summary
+        if: ${{ steps.upload-dist.outputs.artifact-url }}
+        run: |
+          echo "## torch_hpu-${{ steps.list-version.outputs.torch-hpu-version }} built successfully! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "You can download the distribution packages [here](${{ steps.upload-dist.outputs.artifact-url }})." >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup workspace
+        if: always()
+        run: rm -rf ${{ github.workspace }}/*

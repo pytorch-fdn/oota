@@ -1,0 +1,149 @@
+
+name: '_gaudi_hpu_ut'
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        required: true
+        type: string
+        description: 'The runner selected to run on'
+      image:
+        required: true
+        type: string
+        description: 'The docker image which will be loaded'
+      device:
+        required: true
+        type: string
+        description: 'The device selected to run on'
+      torch-artifact:
+        required: false
+        type: string
+        description: 'The distribution artifact name of torch'
+      torch-hpu-artifact:
+        required: true
+        type: string
+        description: 'The distribution artifact name of torch_hpu'
+      torch-hpu-dl-artifact:
+        required: true
+        type: string
+        description: 'The distribution artifact name of torch_hpu dataloader'
+      python_version:
+          required: false
+          type: string
+          default: '3.10'
+          description: 'The python version to use'
+
+# Bash shells do not use ~/.profile or ~/.bashrc so these shells need to be explicitly
+# declared as "shell: bash -el {0}" on steps that need to be properly activated.
+# It's used to activate ascend-toolkit environment variables.
+defaults:
+  run:
+    shell: bash -el {0}
+
+jobs:
+  test:
+    name: test torch_hpu
+    runs-on: ${{ inputs.runner }}
+    container:
+      image: ${{ inputs.image }}
+      volumes:
+        - /usr/local/dcmi:/usr/local/dcmi
+        - /usr/local/bin/hl-smi:/usr/local/bin/hl-smi
+      env:
+        HABANA_VISIBLE_DEVICES: all
+        OMPI_MCA_btl_vader_single_copy_mechanism: none
+      options: >-
+        --ipc host
+        --cap-add sys_nice
+        --runtime habana
+    steps:
+      - name: Show HPU info
+        run: |
+          hl-smi info
+
+      - name: Setup Python environment
+        uses: actions/setup-python@v5
+        id: setup-python
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: Setup CPATH
+        run: |
+          echo  "python version : ${{ steps.setup-python.outputs.python-version }}"
+          python_version="${{ inputs.python_version }}"
+          echo  "python path : ${{ steps.setup-python.outputs.python-path }}"
+          CPATH=${pythonLocation}/include/python${python_version}
+          echo CPATH=${CPATH} >> "${GITHUB_ENV}"
+
+      # See: https://github.com/actions/checkout/issues/363#issuecomment-1915075699
+      - name: Config git
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout PyTorch
+        uses: actions/checkout@v4
+        with:
+          repository: pytorch/pytorch
+          # ref: ${{ inputs.ref }}
+          ref: v2.6.0
+          submodules: recursive
+          path: pytorch
+
+      - name: Checkout torch_hpu
+        uses: actions/checkout@v4
+        with:
+          repository: HabanaAI/gaudi-pytorch-bridge
+          ref: v1.20.0
+          path: torch_hpu
+
+      - name: Install pip dependencies
+        working-directory: torch_hpu
+        run: |
+          pip install -r requirements.txt
+
+      - name: Download torch artifact
+        if: ${{ inputs.torch-artifact }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.torch-artifact }}
+
+      - name: Install torch
+        if: ${{ inputs.torch-artifact }}
+        run: |
+          pip install ${{ inputs.torch-artifact }}
+
+      - name: Download torch_hpu artifact
+        uses: actions/download-artifact@v4
+        with:
+          # name: ${{ inputs.torch-hpu-artifact }}
+          name: torch_hpu_dists
+          path: torch_hpu
+
+      - name: Install torch_hpu
+        working-directory: torch_hpu
+        run: |
+          unzip torch_hpu_dists.zip && cd torch_hpu_dists
+          pip install ${{ inputs.torch-hpu-artifact }}
+          pip install ${{ inputs.torch-hpu-dl-artifact }}
+
+      - name: Show environment info
+        run: |
+          export PT_HPU_LAZY_MODE=0
+          hpu_is_available=$(python -c "import torch; print(torch.hpu.is_available())")
+          hpu_count=$(python -c "import torch; print(torch.hpu.device_count())")
+          echo "HPU is available: ${hpu_is_available}"
+          echo "HPU count: ${hpu_count}"
+          pip list | grep -E 'torch|numpy'
+
+      - name: Do the test
+        continue-on-error: true
+        run: |
+          echo "Call UT test scripts"
+        #   python torch_hpu/ci/access_control_test.py
+
+      - name: Cleanup workspace
+        if: always()
+        run: rm -rf ${{ github.workspace }}/*
