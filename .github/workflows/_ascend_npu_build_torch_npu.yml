@@ -1,4 +1,4 @@
-name: '_ascend_npu_build'
+name: "_ascend_npu_build"
 
 on:
   workflow_call:
@@ -6,22 +6,22 @@ on:
       runner:
         required: true
         type: string
-        description: 'The runner selected to run on'
+        description: "The runner selected to run on"
       image:
         required: true
         type: string
-        description: 'The docker image which will be used to build'
+        description: "The docker image which will be used to build"
       device:
         required: true
         type: string
-        description: 'The device selected to run on'
+        description: "The device selected to run on"
       torch-artifact:
         required: false
         type: string
-        description: 'The distribution artifact name of torch'
+        description: "The distribution artifact name of torch"
     outputs:
       torch-npu-artifact:
-        description: 'The distribution artifact name of torch_npu'
+        description: "The distribution artifact name of torch_npu"
         value: ${{ jobs.build.outputs.dist-name }}
 
 # Bash shells do not use ~/.profile or ~/.bashrc so these shells need to be explicitly

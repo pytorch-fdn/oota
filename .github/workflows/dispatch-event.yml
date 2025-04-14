@@ -1,35 +1,35 @@
-name: 'Dispatch PyTorch events'
+name: "Dispatch PyTorch events"
 
 on:
   schedule:
-    - cron: '0 12 * * *'
+    - cron: "0 12 * * *"
 
   pull_request:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - '.github/workflows/dispatch-event.yml'
-      - '.github/workflows/redispatch-event.yml'
-      - '.github/actions/list-pr/**'
-      - '!**/*.md'
+      - ".github/workflows/dispatch-event.yml"
+      - ".github/workflows/redispatch-event.yml"
+      - ".github/actions/list-pr/**"
+      - "!**/*.md"
 
   workflow_dispatch:
     inputs:
       labels:
         required: false
         type: string
-        default: 'module: PrivateUse1'
-        description: 'The labels on pull requests'
+        default: "module: PrivateUse1"
+        description: "The labels on pull requests"
       hours:
         required: false
         type: number
         default: 24
-        description: 'Pull requests created within this many hours will be listed'
+        description: "Pull requests created within this many hours will be listed"
       limit:
         required: false
         type: number
         default: -1
-        description: 'How many pull requests will be listed'
+        description: "How many pull requests will be listed"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
@@ -50,7 +50,7 @@ jobs:
         id: list-pr
         uses: ./.github/actions/list-pr
         with:
-          token: ${{ secrets.COSDT_BOT_TOKEN }}
+          # token: ${{ secrets.COSDT_BOT_TOKEN }}
           owner: pytorch
           repository: pytorch
           labels: "${{ github.event.inputs.labels || 'module: PrivateUse1' }}"
@@ -58,7 +58,7 @@ jobs:
 
   dispatch-pr:
     if: ${{ needs.list-pr.outputs.prs != '[]' }}
-    name: 'Dispatch PR event - #${{ matrix.data.pull_request.number }}'
+    name: "Dispatch PR event - #${{ matrix.data.pull_request.number }}"
     runs-on: ubuntu-latest
     needs:
       - list-pr
@@ -71,7 +71,7 @@ jobs:
       - name: Dispatch PR event to the out-of-tree test infra
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.COSDT_BOT_TOKEN }}
+          # token: ${{ secrets.COSDT_BOT_TOKEN }}
           repository: pytorch-fdn/oota
           event-type: pytorch-pr-event
           client-payload: ${{ toJSON(matrix.data) }}

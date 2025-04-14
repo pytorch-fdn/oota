@@ -1,37 +1,37 @@
-name: 'Ascend NPU Test Suite'
+name: "Ascend NPU Test Suite"
 
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - '.github/workflows/ascend_npu_test.yml'
-      - '.github/workflows/_ascend_npu_build_torch.yml'
-      - '.github/workflows/_ascend_npu_build_torch_npu.yml'
-      - '.github/workflows/_ascend_npu_ut.yml'
-      - '.github/workflows/_ascend_npu_benchmark.yml'
-      - '.ci/**'
-      - 'ascend_npu/**'
-      - 'src/**'
-      - '!**/*.md'
+      - ".github/workflows/ascend_npu_test.yml"
+      - ".github/workflows/_ascend_npu_build_torch.yml"
+      - ".github/workflows/_ascend_npu_build_torch_npu.yml"
+      - ".github/workflows/_ascend_npu_ut.yml"
+      - ".github/workflows/_ascend_npu_benchmark.yml"
+      - ".ci/**"
+      - "ascend_npu/**"
+      - "src/**"
+      - "!**/*.md"
   pull_request:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - '.github/workflows/ascend_npu_test.yml'
-      - '.github/workflows/_ascend_npu_build_torch.yml'
-      - '.github/workflows/_ascend_npu_build_torch_npu.yml'
-      - '.github/workflows/_ascend_npu_ut.yml'
-      - '.github/workflows/_ascend_npu_benchmark.yml'
-      - '.ci/**'
-      - 'ascend_npu/**'
-      - 'src/**'
-      - '!**/*.md'
+      - ".github/workflows/ascend_npu_test.yml"
+      - ".github/workflows/_ascend_npu_build_torch.yml"
+      - ".github/workflows/_ascend_npu_build_torch_npu.yml"
+      - ".github/workflows/_ascend_npu_ut.yml"
+      - ".github/workflows/_ascend_npu_benchmark.yml"
+      - ".ci/**"
+      - "ascend_npu/**"
+      - "src/**"
+      - "!**/*.md"
   release:
     types:
-      - 'published'
+      - "published"
   schedule:
-    - cron: '0 12 * * *'
+    - cron: "0 12 * * *"
   repository_dispatch:
     types: [pytorch-pr-event-redispatch]
   workflow_dispatch:
@@ -45,8 +45,8 @@ on:
           - linux-arm64-npu-1
           - linux-arm64-npu-2
           - linux-arm64-npu-4
-        default: 'linux-arm64-npu-1'
-        description: 'The runner selected to run on'
+        default: "linux-arm64-npu-1"
+        description: "The runner selected to run on"
       image:
         required: true
         type: choice
@@ -54,8 +54,8 @@ on:
           - ascendai/cann:7.0.1-910b-ubuntu22.04-py3.8
           - ascendai/cann:8.0.0-910b-ubuntu22.04-py3.10
           - ascendai/cann:latest
-        default: 'ascendai/cann:latest'
-        description: 'The docker image which will be loaded'
+        default: "ascendai/cann:latest"
+        description: "The docker image which will be loaded"
       device:
         required: true
         type: choice
@@ -68,8 +68,8 @@ on:
           - /dev/davinci6
           - /dev/davinci7
           - /dev/davinci8
-        default: '/dev/davinci5'
-        description: 'The device selected to run on'
+        default: "/dev/davinci5"
+        description: "The device selected to run on"
 
 # Only cancel the previous runs when triggered by a pull_request event
 #
@@ -168,5 +168,5 @@ jobs:
       device: ${{ needs.prepare.outputs.device }}
       torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
       torch-npu-artifact: ${{ needs.build.outputs.torch-npu-artifact }}
-    secrets:
-      pr-token: ${{ secrets.COSDT_BOT_TOKEN }}
+    # secrets:
+    #   pr-token: ${{ secrets.COSDT_BOT_TOKEN }}
