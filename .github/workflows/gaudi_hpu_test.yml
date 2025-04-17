@@ -3,7 +3,7 @@ name: 'Gaudi HPU Test Suite'
 on:
   push:
     branches:
-      - 'hpu'
+      - 'main'
     paths:
       - '.github/workflows/gaudi_hpu_test.yml'
       - '.github/workflows/_gaudi_hpu_build_torch.yml'
