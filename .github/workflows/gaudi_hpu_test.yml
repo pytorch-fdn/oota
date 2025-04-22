@@ -158,5 +158,3 @@ jobs:
       torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
       torch-hpu-artifact: ${{ needs.build.outputs.torch-hpu-artifact }}
       torch-hpu-dl-artifact: ${{ needs.build.outputs.torch-hpu-dl-artifact }}
-    secrets:
-      pr-token: ${{ secrets.COSDT_BOT_TOKEN }}
