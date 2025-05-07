@@ -133,8 +133,6 @@ jobs:
       image: ${{ needs.prepare.outputs.image }}
       device: ${{ needs.prepare.outputs.device }}
       torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
-      username: ${{ secrets.RUNNER_USERNAME }}
-      token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
 
   test:
     name: Test torch_npu
@@ -152,8 +150,6 @@ jobs:
       device: ${{ needs.prepare.outputs.device }}
       torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
       torch-npu-artifact: ${{ needs.build.outputs.torch-npu-artifact }}
-      username: ${{ secrets.RUNNER_USERNAME }}
-      token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
 
   benchmark:
     name: Run benchmarks
@@ -172,7 +168,5 @@ jobs:
       device: ${{ needs.prepare.outputs.device }}
       torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
       torch-npu-artifact: ${{ needs.build.outputs.torch-npu-artifact }}
-      username: ${{ secrets.RUNNER_USERNAME }}
-      token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
     secrets:
       pr-token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
