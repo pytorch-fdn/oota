@@ -168,5 +168,5 @@ jobs:
       device: ${{ needs.prepare.outputs.device }}
       torch-artifact: ${{ needs.build-torch.outputs.torch-artifact }}
       torch-npu-artifact: ${{ needs.build.outputs.torch-npu-artifact }}
-    # secrets:
-    #   pr-token: ${{ secrets.COSDT_BOT_TOKEN }}
+    secrets:
+      pr-token: ${{ secrets.ASCEND_RUNNER_TOKEN }}

@@ -20,7 +20,7 @@ jobs:
       - name: Redispatch PR event
         uses: peter-evans/repository-dispatch@v3
         with:
-          # token: ${{ secrets.COSDT_BOT_TOKEN }}
+          token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
           repository: ${{ github.repository }}
           event-type: pytorch-pr-event-redispatch
           client-payload: ${{ toJSON(github.event.client_payload) }}

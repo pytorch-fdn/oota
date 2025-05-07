@@ -50,7 +50,7 @@ jobs:
         id: list-pr
         uses: ./.github/actions/list-pr
         with:
-          # token: ${{ secrets.COSDT_BOT_TOKEN }}
+          token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
           owner: pytorch
           repository: pytorch
           labels: "${{ github.event.inputs.labels || 'module: PrivateUse1' }}"
@@ -71,7 +71,7 @@ jobs:
       - name: Dispatch PR event to the out-of-tree test infra
         uses: peter-evans/repository-dispatch@v3
         with:
-          # token: ${{ secrets.COSDT_BOT_TOKEN }}
+          token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
           repository: pytorch-fdn/oota
           event-type: pytorch-pr-event
           client-payload: ${{ toJSON(matrix.data) }}
