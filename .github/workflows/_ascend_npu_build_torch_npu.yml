@@ -59,7 +59,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.ASCEND_RUNNER_TOKEN }}
+          token: ${{ secrets.runner-token }}
 
       - name: Checkout torch_npu
         uses: actions/checkout@v4
