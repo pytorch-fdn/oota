@@ -23,6 +23,10 @@ on:
       torch-npu-artifact:
         description: "The distribution artifact name of torch_npu"
         value: ${{ jobs.build.outputs.dist-name }}
+    secrets:
+      runner-token:
+        description: "A token used to pull private repo"
+        required: true
 
 # Bash shells do not use ~/.profile or ~/.bashrc so these shells need to be explicitly
 # declared as "shell: bash -el {0}" on steps that need to be properly activated.
