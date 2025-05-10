@@ -135,7 +135,8 @@ jobs:
         run: |
           torch_version=$(python -c "import torch; print(torch.__version__)")
           torch_git_version=$(python -c "import torch; print(torch.version.git_version)")
-          torchbench_version=$(curl https://raw.githubusercontent.com/pytorch/pytorch/${torch_git_version}/.github/ci_commit_pins/torchbench.txt)
+          # torchbench_version=$(curl https://raw.githubusercontent.com/pytorch/pytorch/${torch_git_version}/.github/ci_commit_pins/torchbench.txt)
+          torchbench_version=main
           torchvision_version=$(curl https://raw.githubusercontent.com/pytorch/pytorch/${torch_git_version}/.github/ci_commit_pins/vision.txt)
           torchaudio_version=$(curl https://raw.githubusercontent.com/pytorch/pytorch/${torch_git_version}/.github/ci_commit_pins/audio.txt)
           hf_version=$(curl https://raw.githubusercontent.com/pytorch/pytorch/${torch_git_version}/.ci/docker/ci_commit_pins/huggingface.txt)
@@ -206,10 +207,10 @@ jobs:
       - name: Run benchmarks
         working-directory: benchmark
         run: |
+          export PT_HPU_LAZY_MODE=0
           echo "Run torchbench"
-          touch gaudi_hpu_benchmark.json
-          # python run_benchmark.py test_bench --accuracy --device hpu --test eval \
-          #     --output gaudi_hpu_benchmark.json
+          python run_benchmark.py test_bench --accuracy --device hpu --test eval \
+               --output gaudi_hpu_benchmark.json
 
       - name: Upload the benchmark report file
         id: upload-report
@@ -224,7 +225,7 @@ jobs:
       - name: Write to workflow job summary
         run: |
           echo "Write to workflow job summary"
-          # python .ci/benchmark.py --write-gh-job-summary --path benchmark/gaudi_hpu_benchmark.json
+          python .ci/benchmark.py --write-gh-job-summary --path benchmark/gaudi_hpu_benchmark.json
 
       - name: Write to workflow job summary
         run: |
