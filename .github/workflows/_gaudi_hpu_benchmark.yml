@@ -207,9 +207,8 @@ jobs:
         working-directory: benchmark
         run: |
           echo "Run torchbench"
-          touch gaudi_hpu_benchmark.json
-          # python run_benchmark.py test_bench --accuracy --device hpu --test eval \
-          #     --output gaudi_hpu_benchmark.json
+          python run_benchmark.py test_bench --accuracy --device hpu --test eval \
+               --output gaudi_hpu_benchmark.json
 
       - name: Upload the benchmark report file
         id: upload-report
@@ -224,7 +223,7 @@ jobs:
       - name: Write to workflow job summary
         run: |
           echo "Write to workflow job summary"
-          # python .ci/benchmark.py --write-gh-job-summary --path benchmark/gaudi_hpu_benchmark.json
+          python .ci/benchmark.py --write-gh-job-summary --path benchmark/gaudi_hpu_benchmark.json
 
       - name: Write to workflow job summary
         run: |
