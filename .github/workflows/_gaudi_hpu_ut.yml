@@ -139,10 +139,12 @@ jobs:
           pip list | grep -E 'torch|numpy'
 
       - name: Do the test
-        continue-on-error: true
+        working-directory: pytorch
         run: |
+          pip install -r .ci/docker/requirements-ci.txt
           echo "Call UT test scripts"
-        #   python torch_hpu/ci/access_control_test.py
+          export PT_HPU_LAZY_MODE=0
+          python test/run_test.py -k test_Dropout2d_hpu --include nn/test_dropout
 
       - name: Cleanup workspace
         if: always()
