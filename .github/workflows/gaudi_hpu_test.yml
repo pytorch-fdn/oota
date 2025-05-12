@@ -98,7 +98,7 @@ jobs:
             echo "ref=${{ github.event.client_payload.ref }}" >> $GITHUB_OUTPUT
             echo "sha=${{ github.event.client_payload.sha }}" >> $GITHUB_OUTPUT
           else
-            ref=refs/heads/main
+            ref=refs/heads/release/2.6
             echo "ref=$ref" >> $GITHUB_OUTPUT
             echo "sha=$(git ls-remote -h https://github.com/pytorch/pytorch.git $ref | awk '{print $1}')" >> $GITHUB_OUTPUT
           fi
