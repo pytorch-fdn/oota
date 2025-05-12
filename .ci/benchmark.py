@@ -1,6 +1,9 @@
 import argparse
 import os
 import sys
+
+src_parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(src_parent_dir)
 from src.benchmark.utils import read_metrics, to_markdown_table
 
 
