@@ -87,16 +87,22 @@ jobs:
       - name: Set environment params
         id: set-env
         run: |
-          echo "runner=${{ github.event.ihputs.runner || 'linux-gaudi3' }}" >> $GITHUB_OUTPUT
-          echo "device=${{ github.event.ihputs.device || '0' }}" >> $GITHUB_OUTPUT
-          echo "image=${{ github.event.ihputs.image || 'vault.habana.ai/gaudi-docker/1.20.0/ubuntu24.04/habanalabs/pytorch-installer-2.6.0:latest' }}" >> $GITHUB_OUTPUT
+          echo "runner=${{ github.event.inputs.runner || 'linux-gaudi3' }}" >> $GITHUB_OUTPUT
+          echo "device=${{ github.event.inputs.device || '0' }}" >> $GITHUB_OUTPUT
+          echo "image=${{ github.event.inputs.image || 'vault.habana.ai/gaudi-docker/1.20.0/ubuntu24.04/habanalabs/pytorch-installer-2.6.0:latest' }}" >> $GITHUB_OUTPUT
 
       - name: List ref to the PyTorch branch
         id: list-ref
-        if: ${{ github.event_name == 'repository_dispatch' }}
         run: |
-          echo "ref=${{ github.event.client_payload.ref }}" >> $GITHUB_OUTPUT
-          echo "sha=${{ github.event.client_payload.sha }}" >> $GITHUB_OUTPUT
+          if ${{ github.event_name == 'repository_dispatch' }}; then
+            echo "ref=${{ github.event.client_payload.ref }}" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.event.client_payload.sha }}" >> $GITHUB_OUTPUT
+          else
+            ref=refs/heads/main
+            echo "ref=$ref" >> $GITHUB_OUTPUT
+            echo "sha=$(git ls-remote -h https://github.com/pytorch/pytorch.git $ref | awk '{print $1}')" >> $GITHUB_OUTPUT
+          fi
+
 
   build-torch:
     name: Build torch
@@ -107,6 +113,7 @@ jobs:
     with:
       runner: ${{ needs.prepare.outputs.runner }}
       image: ${{ needs.prepare.outputs.image }}
+      ref: ${{ needs.prepare.outputs.ref }}
 
 
   build:
@@ -133,6 +140,7 @@ jobs:
       (success() || (needs.build-torch.result == 'skipped' && needs.build.result == 'success'))
     uses: ./.github/workflows/_gaudi_hpu_ut.yml
     with:
+      ref: ${{ needs.prepare.outputs.ref }}
       runner: ${{ needs.prepare.outputs.runner }}
       image: ${{ needs.prepare.outputs.image }}
       device: ${{ needs.prepare.outputs.device }}
@@ -152,6 +160,7 @@ jobs:
       (success() || (needs.build-torch.result == 'skipped' && needs.build.result == 'success'))
     uses: ./.github/workflows/_gaudi_hpu_benchmark.yml
     with:
+      ref: ${{ needs.prepare.outputs.ref }}
       runner: ${{ needs.prepare.outputs.runner }}
       image: ${{ needs.prepare.outputs.image }}
       device: ${{ needs.prepare.outputs.device }}

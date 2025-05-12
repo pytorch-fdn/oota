@@ -4,6 +4,11 @@ name: '_gaudi_hpu_ut'
 on:
   workflow_call:
     inputs:
+      ref:
+        required: false
+        type: string
+        default: 'refs/heads/main'
+        description: 'The branch, tag or SHA to checkout'
       runner:
         required: true
         type: string
@@ -87,8 +92,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: pytorch/pytorch
-          # ref: ${{ inputs.ref }}
-          ref: v2.6.0
+          ref: ${{ inputs.ref }}
           submodules: recursive
           path: pytorch
 
