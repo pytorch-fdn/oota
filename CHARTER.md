@@ -22,9 +22,9 @@ The Accelerator Integration Working Group ("WG") operates under the PyTorch Tech
 
 ### Voting Members
 
-* Vote on WG matters (platform admissions, Co-Chair elections, charter changes); attend meetings and participate in reviews.
-* Each organization that holds a TAC voting seat and is active in the WG designates one (1) voting representative (and optionally one alternate) by notifying the Co-Chairs.
-* No fixed term: status lasts while the organization holds its TAC voting seat; per-vote eligibility follows Section 4. An organization may replace its representative at any time. The Co-Chairs maintain a public roster.
+* Vote on WG matters (additional compute platform admissions, Co-Chair elections, charter changes).
+* An organization is eligible to hold a voting seat once it (a) holds a TAC voting seat, and (b) is active in the WG — evidenced by meeting attendance, contribution to WG-scoped repositories, or maintaining an accelerator integration effort within the WG's scope, within the preceding six (6) months. Eligible organizations designate one (1) voting representative (and optionally one alternate) by notifying the Co-Chairs.
+* No fixed term: status lasts while conditions (a) and (b) hold. The Co-Chairs review the roster every six (6) months; an organization with no activity under (b) across that period has its voting status suspended until it re-engages, at which point it resumes automatically — no re-election needed. An organization may replace its representative at any time by notifying the Co-Chairs, who maintain the current roster (name, organization) in this repository's README.
 
 ### Contributors
 
@@ -32,10 +32,12 @@ The Accelerator Integration Working Group ("WG") operates under the PyTorch Tech
 
 All participants are subject to the PyTorch Foundation Code of Conduct.
 
-## 4. Voting
+### 4. Voting
 
-1. One (1) vote per eligible voting member; one (1) vote per organization.
-2. Eligibility: the voting member has attended two (2) of the previous three (3) WG meetings.
+Voting in this WG functions as a lightweight confirmation step rather than an adversarial process: substantive decisions, particularly platform admissions, are typically resolved during Co-Chair technical pre-review, and the procedures below are designed to keep technical work moving rather than to invite extended deliberation.
+
+1. One (1) vote per organization, cast by its eligible voting representative (or alternate, per Section 3). The representative of record at the time a vote opens casts the organization's vote.
+2. Eligibility follows Section 3 — a TAC voting seat plus active WG participation, reviewed every six (6) months by the Co-Chairs.
 3. Quorum: more than half of the eligible voting members participate; a vote passes by a simple majority of participants.
 4. Default is lazy consensus; formal votes are used when consensus cannot be reached or a process requires one.
 
