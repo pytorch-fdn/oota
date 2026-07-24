@@ -8,7 +8,7 @@ The Accelerator Integration Working Group ("WG") operates under the PyTorch Tech
 
 * Integration guidance for out-of-tree accelerators.
 * Improvements to PyTorch's accelerator integration mechanisms.
-* Development and execution of the [Additional Compute Platforms Admission Process](url-to-be-added) (admission, periodic review, offboarding).
+* Development and execution of the [Additional Compute Platforms Admission Process](https://github.com/pytorch-fdn/accelerator-integration-wg/blob/main/governance/pytorch_additional_compute_platforms_admission_process.md) (admission, periodic review, offboarding).
 
 ## 3. Roles
 
