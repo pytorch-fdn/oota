@@ -2,6 +2,21 @@
 
 This repository is dedicated to improving and streamlining the integration of diverse AI hardware accelerators with PyTorch. It supports the efforts of the Accelerator Integration Working Group to reduce integration complexity, enhance the integration mechanism, and establish reliable CI infrastructure for out-of-tree accelerators. The goal is to build a scalable and inclusive PyTorch hardware ecosystem. 
 
+## Working Group Members
+
+*All names below are arranged in alphabetical order; sequence carries no priority or seniority.*
+
+### Co-Chairs
+
+- Guangye Yu ([@guangyey](https://github.com/guangyey))
+- Zesheng Zong ([@zeshengzong](https://github.com/zeshengzong))
+
+### Voting Members
+
+- Alban Desmaison ([@alband](https://github.com/alband))
+- Guangye Yu ([@guangyey](https://github.com/guangyey))
+- Zesheng Zong ([@zeshengzong](https://github.com/zeshengzong))
+
 ## Accelerator Integration Guide
 
 New hardware accelerators can integrate with PyTorch using the shared dispatch key [PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html). We're currently working on a comprehensive guide to help developers connect their custom hardware to PyTorch. This guide will include step-by-step instructions and practical examples based on the [OpenReg](https://github.com/pytorch/pytorch/tree/main/test/cpp_extensions/open_registration_extension/torch_openreg) reference implementation. For more details, refer to the related [RFC](https://github.com/pytorch/rfcs/blob/f6048cbd4fcc7877de6b049f96c0b9dece74cbd8/RFC-0045-PyTorch-Accelerator-Integration-Enhancements.md).
