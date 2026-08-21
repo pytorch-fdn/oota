@@ -14,6 +14,7 @@ This repository is dedicated to improving and streamlining the integration of di
 ### Voting Members
 
 - Alban Desmaison ([@alband](https://github.com/alband))
+- Claudio Basile ([@cbasile-g](https://github.com/cbasile-g))
 - Guangye Yu ([@guangyey](https://github.com/guangyey))
 - Zesheng Zong ([@zeshengzong](https://github.com/zeshengzong))
 
