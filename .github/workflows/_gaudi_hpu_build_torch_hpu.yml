@@ -63,7 +63,7 @@ jobs:
       dl-dist-name: ${{ steps.list-dist.outputs.dl-dist-name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python environment
         uses: actions/setup-python@v5

@@ -43,7 +43,7 @@ jobs:
       prs: ${{ steps.list-pr.outputs.prs }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # List PRs created in the past 24 hours
       - name: List PyTorch PRs

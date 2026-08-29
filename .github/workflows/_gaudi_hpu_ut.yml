@@ -90,10 +90,10 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout PyTorch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pytorch/pytorch
           ref: ${{ inputs.ref }}
@@ -101,7 +101,7 @@ jobs:
           path: pytorch
 
       - name: Checkout torch_hpu
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: HabanaAI/gaudi-pytorch-bridge
           ref: v${{ inputs.rel_ver }}

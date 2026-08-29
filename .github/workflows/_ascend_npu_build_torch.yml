@@ -52,7 +52,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout PyTorch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pytorch/pytorch
           ref: ${{ inputs.ref }}

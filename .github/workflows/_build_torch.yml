@@ -48,7 +48,7 @@ jobs:
       dist-name: ${{ steps.list-dist.outputs.dist-name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python environment
         uses: actions/setup-python@v5
@@ -69,7 +69,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout PyTorch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pytorch/pytorch
           ref: ${{ inputs.ref }}
