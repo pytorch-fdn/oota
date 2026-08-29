@@ -184,21 +184,23 @@ jobs:
           repository: pytorch/audio
           ref: ${{ steps.list-torch-version.outputs.torchaudio-version }}
           path: audio
-          
+
       - name: Install torchvision torchaudio and transfoermers
         run: |
           cd vision && python setup.py bdist_wheel && pip uninstall torchvision -y && pip install dist/*.whl && cd ..
           cd audio && python setup.py bdist_wheel && pip uninstall torchaudio -y && pip install dist/*.whl && cd ..
           pip install --force-reinstall git+https://github.com/huggingface/transformers@${{ steps.list-torch-version.outputs.hf-version }}
-  
+
       - name: Install benchmark dependencies
         run: |
           pip install -r benchmark/requirements.txt
 
       - name: Install dependencies for all the models
         run: |
-          python benchmark/install.py --userbenchmark test_bench --continue_on_fail
-      
+          #python benchmark/install.py --userbenchmark test_bench --continue_on_fail
+          #torchbench accuracy test
+          python benchmark/install.py --continue_on_fail
+
       - name: Install project dependencies
         run: |
           pip install -r requirements.txt
@@ -216,8 +218,11 @@ jobs:
         working-directory: benchmark
         run: |
           export PT_HPU_LAZY_MODE=0
-          echo "Run torchbench"
-          python run_benchmark.py test_bench --accuracy --device hpu --test eval \
+          #echo "Run torchbench"
+          #python run_benchmark.py test_bench --accuracy --device hpu --test eval \
+          #    --output gaudi_hpu_benchmark.json
+          echo "Run torchbench Accuracy Test"
+          python test.py -v -k "eval_hpu"  \
                --output gaudi_hpu_benchmark.json
 
       - name: Upload the benchmark report file
@@ -238,7 +243,7 @@ jobs:
       - name: Write to workflow job summary
         run: |
           echo "TODO: update test results dashboard"
-    
+
       - name: Cleanup workspace
         if: always()
         run: rm -rf ${{ github.workspace }}/*
